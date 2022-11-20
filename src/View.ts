@@ -1,4 +1,5 @@
-import {Entity} from './Entity';
+import type {Zone} from './Zone';
+import type {Entity} from './Entity';
 
 type LayerT = Record<string, {
   context: CanvasRenderingContext2D,
@@ -12,9 +13,9 @@ export class View {
   layerZIndexCount = 0;
   layers: LayerT = {};
 
-  constructor({width, height}: Pick<View, 'width' | 'height'>) {
-    this.width = width;
-    this.height = height;
+  constructor(zone: Zone) {
+    this.width = zone.width;
+    this.height = zone.height;
     this.createLayer('blocks').style.background = '#000';
     this.createLayer('tanks');
     this.createLayer('projectiles');
@@ -38,14 +39,14 @@ export class View {
   }
   bindEntityToLayer(entity: Entity, layerId: keyof LayerT) {
     this.layers[layerId].entities.push(entity);
-    entity.on('componentShouldUpdate', () => {
+    entity.on('entityShouldUpdate', () => {
       this.eraseEntityFromLayer(entity, layerId);
     });
-    entity.on('componentDidUpdate', () => {
+    entity.on('entityDidUpdate', () => {
       this.drawEntityOnLayer(entity, layerId);
     });
   }
-  getEntityRect(entity: Entity) {
+  getEntityActualRect(entity: Entity) {
     return [
       this.convertToPixels(entity.posX),
       this.convertToPixels(entity.posY),
@@ -56,11 +57,11 @@ export class View {
   drawEntityOnLayer(entity: Entity, layerId: keyof LayerT) {
     const context = this.layers[layerId].context;
     context.fillStyle = 'grey';
-    context.fillRect(...this.getEntityRect(entity));
+    context.fillRect(...this.getEntityActualRect(entity));
   }
   eraseEntityFromLayer(entity: Entity, layerId: keyof LayerT) {
     const context = this.layers[layerId].context;
-    context.clearRect(...this.getEntityRect(entity));
+    context.clearRect(...this.getEntityActualRect(entity));
   }
   redrawAllEntitiesOnLayer(layerId: keyof LayerT) {
     const {context, entities} = this.layers[layerId];
