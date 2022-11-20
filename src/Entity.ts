@@ -16,10 +16,9 @@ export class Entity extends (EventBus.Model) {
   crossable = false;
   nextRect: RectT;
   color = 'grey';
-  constructor({width, height}: Pick<Entity, 'width' | 'height'>) {
+  constructor(props: Partial<Entity>) {
     super();
-    this.width = width;
-    this.height = height;
+    Object.assign(this, props);
   }
   setState(newState: Partial<Entity>) {
     this.emit('entityShouldUpdate');

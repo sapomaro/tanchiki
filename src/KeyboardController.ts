@@ -9,17 +9,18 @@ export class KeyboardController extends (EventBus.Model)  {
     this.type = type;
     if (type.includes('wasd')) {
       window.addEventListener('keydown', (event: KeyboardEvent) => {
-        switch(event.key) {
-          case 'w':
+        event.preventDefault();
+        switch(event.code) {
+          case 'KeyW':
             this.emit('move', 'UP');
             break;
-          case 'a':
+          case 'KeyA':
             this.emit('move', 'LEFT');
             break;
-          case 's':
+          case 'KeyS':
             this.emit('move', 'DOWN');
             break;
-          case 'd':
+          case 'KeyD':
             this.emit('move', 'RIGHT');
             break;
         }
@@ -27,6 +28,7 @@ export class KeyboardController extends (EventBus.Model)  {
     }
     if (type.includes('arrows')) {
       window.addEventListener('keydown', (event: KeyboardEvent) => {
+        event.preventDefault();
         switch(event.key) {
           case 'ArrowUp':
             this.emit('move', 'UP');
