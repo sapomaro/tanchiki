@@ -58,7 +58,8 @@ export class Zone {
   hasCollisionsWithMatrix(rect: RectT, entity: Entity) {
     for (let x = rect.posX + rect.width - 1; x >= rect.posX; --x) {
       for (let y = rect.posY + rect.height - 1; y >= rect.posY; --y) {
-        if (this.matrix[x][y] !== entity && this.matrix[x][y] !== null) {
+        const cell = this.matrix[x][y];
+        if (cell !== entity && cell !== null && !cell.crossable) {
           return true;
         }
       }

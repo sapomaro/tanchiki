@@ -11,7 +11,11 @@ export class Entity extends (EventBus.Model) {
   height = 0;
   movePace = 2;
   direction: DirectionT = 'UP';
+  type: 'tank' | 'brickWall' | 'conreteWall' | 'trees' | 'water' | 'ice';
+  movable = false;
+  crossable = false;
   nextRect: RectT;
+  color = 'grey';
   constructor({width, height}: Pick<Entity, 'width' | 'height'>) {
     super();
     this.width = width;

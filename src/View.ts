@@ -16,9 +16,10 @@ export class View {
   constructor(zone: Zone) {
     this.width = zone.width;
     this.height = zone.height;
-    this.createLayer('blocks').style.background = '#000';
+    this.createLayer('floor').style.background = '#000';
     this.createLayer('tanks');
     this.createLayer('projectiles');
+    this.createLayer('ceiling');
   }
   convertToPixels(value: number) {
     return value * this.pixelRatio;
@@ -56,7 +57,7 @@ export class View {
   }
   drawEntityOnLayer(entity: Entity, layerId: keyof LayerT) {
     const context = this.layers[layerId].context;
-    context.fillStyle = 'grey';
+    context.fillStyle = entity.color;
     context.fillRect(...this.getEntityActualRect(entity));
   }
   eraseEntityFromLayer(entity: Entity, layerId: keyof LayerT) {
