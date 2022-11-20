@@ -1,11 +1,13 @@
 import {EventBus} from './EventBus';
 
+export type DirectionT = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
+
 export class Entity extends (EventBus.Model) {
   posX = 0;
   posY = 0;
   width = 0;
   height = 0;
-  direction = 0;
+  direction: DirectionT = 'UP';
   constructor({width, height}: Pick<Entity, 'width' | 'height'>) {
     super();
     this.width = width;
@@ -18,13 +20,23 @@ export class Entity extends (EventBus.Model) {
   }
   move() {
     this.emit('componentShouldUpdate');
-    ++this.posX;
+    switch(this.direction) {
+      case 'UP':
+        --this.posY;
+        break;
+      case 'DOWN':
+        ++this.posY;
+        break;
+      case 'LEFT':
+        --this.posX;
+        break;
+      case 'RIGHT':
+        ++this.posX;
+        break;
+    }
     this.emit('componentDidUpdate');
   }
-  rotate() {
-
-  }
-  render() {
-
+  turn(direction: DirectionT) {
+    this.direction = direction;
   }
 }
