@@ -10,6 +10,9 @@ export class Entity extends (EventBus.Model) {
   width = 0;
   height = 0;
   movePace = 2;
+  moveSpeed = 2;
+  moving = true;
+  moveProcess: ReturnType<typeof setInterval> | null = null;
   direction: DirectionT = 'UP';
   type: 'tank' | 'brickWall' | 'conreteWall' | 'trees' | 'water' | 'ice';
   movable = false;
@@ -51,12 +54,16 @@ export class Entity extends (EventBus.Model) {
     return this.nextRect;
   }
   move() {
+    this.moving = true;
     this.startMove();
     const moveState: MoveStateT = {hasCollision: false};
     this.emit('entityShouldMove', moveState);
     if (!moveState.hasCollision) {
       this.finishMove();
     }
+  }
+  stop() {
+    this.moving = false;
   }
   turn(newDirection: DirectionT) {
     if (this.direction !== newDirection) {

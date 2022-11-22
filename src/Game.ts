@@ -1,6 +1,6 @@
 import {Zone} from './Zone';
 import {View} from './View';
-import {KeyboardController} from './KeyboardController';
+import {Controller} from './Controller';
 import {Tank} from './Tank';
 import {Terrain} from './Terrain';
 import type {Entity, DirectionT} from './Entity';
@@ -8,8 +8,9 @@ import type {Entity, DirectionT} from './Entity';
 export class Game {
   zone: Zone;
   view: View;
-  controllerWasd: KeyboardController;
-  controllerArrows: KeyboardController;
+  controllerWasd: Controller;
+  controllerArrows: Controller;
+  tickTimeMs = 100;
 
   createEntity(props: Pick<Entity, 'type' | 'width' | 'height' | 'posX' | 'posY'>) {
     let entity;
@@ -31,8 +32,8 @@ export class Game {
   init() {
     this.zone = new Zone({width: 52, height: 52});
     this.view = new View(this.zone);
-    this.controllerWasd = new KeyboardController(['wasd']);
-    this.controllerArrows = new KeyboardController(['arrows']);
+    this.controllerWasd = new Controller(['wasd']);
+    this.controllerArrows = new Controller(['arrows']);
 
     const tank1 = this.createEntity({type: 'tank', posX: 4, posY: 4, width: 4, height: 4});
     const tank2 = this.createEntity({type: 'tank', posX: 12, posY: 12, width: 4, height: 4});
@@ -43,11 +44,25 @@ export class Game {
 
     this.controllerWasd.on('move', (direction: DirectionT) => {
       tank1.turn(direction);
-      tank1.move();
+      if (tank1.moveProcess) {
+        clearInterval(tank1.moveProcess);
+      }
+      tank1.moveProcess = setInterval(() => {
+        if (!tank1.moving && tank1.moveProcess) {
+          clearInterval(tank1.moveProcess);
+        }
+        tank1.move();
+      }, this.tickTimeMs);
+    });
+    this.controllerWasd.on('stop', () => {
+      tank1.stop();
     });
     this.controllerArrows.on('move', (direction: DirectionT) => {
       tank2.turn(direction);
       tank2.move();
+    });
+    this.controllerArrows.on('stop', () => {
+      tank1.stop();
     });
   }
 
