@@ -44,26 +44,13 @@ export class Game {
 
     this.controllerWasd.on('move', (direction: DirectionT) => {
       tank1.turn(direction);
-      if (tank1.moveProcess) {
-        clearInterval(tank1.moveProcess);
-      }
-      tank1.moveProcess = setInterval(() => {
-        if (!tank1.moving && tank1.moveProcess) {
-          clearInterval(tank1.moveProcess);
-        }
-        tank1.move();
-      }, this.tickTimeMs);
-    });
-    this.controllerWasd.on('stop', () => {
-      tank1.stop();
+      tank1.move();
     });
     this.controllerArrows.on('move', (direction: DirectionT) => {
       tank2.turn(direction);
       tank2.move();
     });
-    this.controllerArrows.on('stop', () => {
-      tank1.stop();
-    });
+
   }
 
 }

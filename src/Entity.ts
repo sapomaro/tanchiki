@@ -12,7 +12,6 @@ export class Entity extends (EventBus.Model) {
   movePace = 2;
   moveSpeed = 2;
   moving = true;
-  moveProcess: ReturnType<typeof setInterval> | null = null;
   direction: DirectionT = 'UP';
   type: 'tank' | 'brickWall' | 'conreteWall' | 'trees' | 'water' | 'ice';
   movable = false;

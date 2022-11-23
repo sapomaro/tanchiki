@@ -4,6 +4,22 @@ export type ControllerTypeT = Array<'wasd' | 'arrows'>;
 
 export class Controller extends (EventBus.Model)  {
   type: ControllerTypeT;
+  tickTimeMs: 1000;
+  tickProcess: ReturnType<typeof setInterval> | null = null;
+  isKeyPressed = false;
+  pressedKeys: Partial<Record<keyof Controller['keyBindings'], boolean>> = {};
+  pressedKeysCount: 0;
+  keyBindings = {
+    KeyW: this.moveUp.bind(this),
+    KeyA: this.moveLeft.bind(this),
+    KeyS: this.moveDown.bind(this),
+    KeyD: this.moveRight.bind(this),
+    ArrowUp: this.moveUp.bind(this),
+    ArrowLeft: this.moveLeft.bind(this),
+    ArrowDown: this.moveDown.bind(this),
+    ArrowRight: this.moveRight.bind(this),
+  };
+
   constructor(type: ControllerTypeT) {
     super();
     this.type = type;
@@ -13,9 +29,34 @@ export class Controller extends (EventBus.Model)  {
     if (type.includes('arrows')) {
       this.registerEventsForArrows();
     }
+    this.startTickProcess();
   }
-  throttle() {
-
+  keyBindingExists(key: string): key is keyof Controller['keyBindings'] {
+    if (key in this.keyBindings) {
+      return true;
+    }
+    return false;
+  }
+  startTickProcess() {
+    this.stopTickProcess();
+    this.tickProcess = setInterval(() => {
+      if (this.isKeyPressed) {
+        const keys = Object.keys(this.pressedKeys);
+        const currentKey = keys[this.pressedKeysCount];
+        if (!this.keyBindingExists(currentKey)) {
+          return;
+        }
+        this.keyBindings[currentKey]();
+        if (++this.pressedKeysCount >= keys.length) {
+          this.pressedKeysCount = 0;
+        }
+      }
+    }, 100);
+  }
+  stopTickProcess() {
+    if (this.tickProcess) {
+      clearInterval(this.tickProcess);
+    }
   }
   moveUp() {
     this.emit('move', 'UP');
@@ -40,16 +81,12 @@ export class Controller extends (EventBus.Model)  {
       }
       switch(event.code) {
         case 'KeyW':
-          this.moveUp();
-          break;
         case 'KeyA':
-          this.moveLeft();
-          break;
         case 'KeyS':
-          this.moveDown();
-          break;
         case 'KeyD':
-          this.moveRight();
+          this.isKeyPressed = true;
+          this.pressedKeys[event.code] = true;
+          this.pressedKeysCount = 0;
           break;
       }
     });
@@ -60,7 +97,12 @@ export class Controller extends (EventBus.Model)  {
         case 'KeyA':
         case 'KeyS':
         case 'KeyD':
-          this.moveStop();
+          //this.moveStop();
+          delete this.pressedKeys[event.code];
+          if (!Object.keys(this.pressedKeys).length) {
+            this.isKeyPressed = false;
+          }
+          this.pressedKeysCount = 0;
           break;
       }
     });
@@ -71,18 +113,14 @@ export class Controller extends (EventBus.Model)  {
       if (event.repeat) {
         return false;
       }
-      switch(event.key) {
+      switch(event.code) {
         case 'ArrowUp':
-          this.moveUp();
-          break;
         case 'ArrowLeft':
-          this.moveLeft();
-          break;
         case 'ArrowDown':
-          this.moveDown();
-          break;
         case 'ArrowRight':
-          this.moveRight();
+          this.isKeyPressed = true;
+          this.pressedKeys[event.code] = true;
+          this.pressedKeysCount = 0;
           break;
       }
     });
@@ -93,7 +131,12 @@ export class Controller extends (EventBus.Model)  {
         case 'ArrowLeft':
         case 'ArrowDown':
         case 'ArrowRight':
-          this.moveStop();
+          //this.moveStop();
+          delete this.pressedKeys[event.code];
+          if (!Object.keys(this.pressedKeys).length) {
+            this.isKeyPressed = false;
+          }
+          this.pressedKeysCount = 0;
           break;
       }
     });
