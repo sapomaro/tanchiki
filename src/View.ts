@@ -22,7 +22,7 @@ export class View {
     this.createLayer('ceiling');
   }
   convertToPixels(value: number) {
-    return value * this.pixelRatio;
+    return Math.round(value * this.pixelRatio);
   }
   createLayer(id: string) {
     const layer = document.createElement('canvas');

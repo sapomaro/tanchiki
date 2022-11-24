@@ -10,20 +10,37 @@ export class Game {
   view: View;
   controllerWasd: Controller;
   controllerArrows: Controller;
-  tickTimeMs = 100;
+  loopProcess: ReturnType<typeof setInterval> | null = null;
+  loopTimeMs = 20;
+  dynamicEntities: Array<Tank> = [];
 
-  createEntity(props: Pick<Entity, 'type' | 'width' | 'height' | 'posX' | 'posY'>) {
-    let entity;
-    if (props.type === 'tank') {
-      entity = new Tank(props);
-      this.view.bindEntityToLayer(entity, 'tanks');
-    } else {
-      entity = new Terrain(props);
-      if (props.type === 'trees') {
-        this.view.bindEntityToLayer(entity, 'ceiling');
-      } else {
-        this.view.bindEntityToLayer(entity, 'floor');
+  startLoop() {
+    this.stopLoop();
+    this.loopProcess = setInterval(() => {
+      for (const entity of this.dynamicEntities) {
+        entity.move();
       }
+    }, this.loopTimeMs);
+  }
+  stopLoop() {
+    if (this.loopProcess) {
+      clearInterval(this.loopProcess);
+    }
+  }
+  createTank(props: Pick<Entity, 'width' | 'height' | 'posX' | 'posY'>) {
+    const entity = new Tank(props);
+    this.dynamicEntities.push(entity);
+    this.view.bindEntityToLayer(entity, 'tanks');
+    this.zone.registerEntity(entity);
+    entity.spawn(props);
+    return entity;
+  }
+  createTerrain(props: Pick<Entity, 'type' | 'width' | 'height' | 'posX' | 'posY'>) {
+    const entity = new Terrain(props);
+    if (props.type === 'trees') {
+      this.view.bindEntityToLayer(entity, 'ceiling');
+    } else {
+      this.view.bindEntityToLayer(entity, 'floor');
     }
     this.zone.registerEntity(entity);
     entity.spawn(props);
@@ -34,23 +51,28 @@ export class Game {
     this.view = new View(this.zone);
     this.controllerWasd = new Controller(['wasd']);
     this.controllerArrows = new Controller(['arrows']);
+    this.startLoop();
 
-    const tank1 = this.createEntity({type: 'tank', posX: 4, posY: 4, width: 4, height: 4});
-    const tank2 = this.createEntity({type: 'tank', posX: 12, posY: 12, width: 4, height: 4});
+    const tank1 = this.createTank({posX: 4, posY: 4, width: 4, height: 4});
+    tank1.moveSpeed = 4;
+    const tank2 = this.createTank({posX: 12, posY: 12, width: 4, height: 4});
 
-    this.createEntity({type: 'brickWall', width: 4, height: 32, posX: 20, posY: 16});
-    this.createEntity({type: 'trees', width: 16, height: 8, posX: 28, posY: 16});
-    this.createEntity({type: 'water', width: 16, height: 4, posX: 28, posY: 32});
+    this.createTerrain({type: 'brickWall', width: 4, height: 32, posX: 20, posY: 16});
+    this.createTerrain({type: 'trees', width: 16, height: 8, posX: 28, posY: 16});
+    this.createTerrain({type: 'water', width: 16, height: 4, posX: 28, posY: 32});
 
     this.controllerWasd.on('move', (direction: DirectionT) => {
-      tank1.turn(direction);
-      tank1.move();
+      tank1.go(direction);
+    });
+    this.controllerWasd.on('stop', () => {
+      tank1.stop();
     });
     this.controllerArrows.on('move', (direction: DirectionT) => {
-      tank2.turn(direction);
-      tank2.move();
+      tank2.go(direction);
     });
-
+    this.controllerArrows.on('stop', () => {
+      tank2.stop();
+    });
   }
 
 }

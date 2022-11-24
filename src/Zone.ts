@@ -1,4 +1,5 @@
-import type {Entity, MoveStateT, RectT} from './Entity';
+import type {Entity, RectT} from './Entity';
+import type {MoveStateT} from './Tank';
 
 export class Zone {
   width = 0;
@@ -23,15 +24,23 @@ export class Zone {
     }
   }
   writeEntityToMatrix(entity: Entity) {
-    this.updateMatrix(entity.getRect(), entity);
+    if (entity.alignedToGrid) {
+      this.updateMatrix(entity.getRect(), entity);
+    }
   }
   deleteEntityFromMatrix(entity: Entity) {
-    this.updateMatrix(entity.getRect(), null);
+    if (entity.alignedToGrid) {
+      this.updateMatrix(entity.lastRect, null);
+    }
   }
   registerEntity(entity: Entity) {
-    entity.on('entityShouldMove', (moveState: MoveStateT) => {
+    entity.on('entityWillMove', (moveState: MoveStateT) => {
       if (this.hasCollision(entity)) {
         moveState.hasCollision = true;
+      } else {
+        if (entity.alignedToGrid) {
+          this.updateMatrix(entity.nextRect, entity);
+        }
       }
     });
     entity.on('entityShouldUpdate', () => {

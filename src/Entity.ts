@@ -2,20 +2,18 @@ import {EventBus} from './EventBus';
 
 export type DirectionT = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 export type RectT = Pick<Entity, 'posX' | 'posY' | 'width' | 'height'>;
-export type MoveStateT = {hasCollision: boolean};
 
 export class Entity extends (EventBus.Model) {
   posX = 0;
   posY = 0;
   width = 0;
   height = 0;
-  movePace = 2;
-  moveSpeed = 2;
-  moving = true;
   direction: DirectionT = 'UP';
   type: 'tank' | 'brickWall' | 'conreteWall' | 'trees' | 'water' | 'ice';
+  alignedToGrid = true;
   movable = false;
   crossable = false;
+  lastRect: RectT;
   nextRect: RectT;
   color = 'grey';
   constructor(props: Partial<Entity>) {
@@ -31,42 +29,7 @@ export class Entity extends (EventBus.Model) {
     return {posX: this.posX, posY: this.posY, width: this.width, height: this.height};
   }
   spawn({posX, posY}: Pick<Entity, 'posX' | 'posY'>) {
+    this.lastRect = {...this.getRect(), ...{posX, posY}};
     this.setState({posX, posY});
-  }
-  startMove() {
-    this.nextRect = {...this.getRect(), ...(() => {
-      switch(this.direction) {
-        case 'UP':
-          return {posY: this.posY - this.movePace};
-        case 'DOWN':
-          return {posY: this.posY + this.movePace};
-        case 'LEFT':
-          return {posX: this.posX - this.movePace};
-        case 'RIGHT':
-          return {posX: this.posX + this.movePace};
-      }
-    })()};
-    return this.nextRect;
-  }
-  finishMove() {
-    this.setState(this.nextRect);
-    return this.nextRect;
-  }
-  move() {
-    this.moving = true;
-    this.startMove();
-    const moveState: MoveStateT = {hasCollision: false};
-    this.emit('entityShouldMove', moveState);
-    if (!moveState.hasCollision) {
-      this.finishMove();
-    }
-  }
-  stop() {
-    this.moving = false;
-  }
-  turn(newDirection: DirectionT) {
-    if (this.direction !== newDirection) {
-      this.setState({direction: newDirection});
-    }
   }
 }

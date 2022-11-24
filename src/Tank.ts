@@ -1,9 +1,10 @@
-import {Entity} from './Entity';
+import {DynamicEntity} from './DynamicEntity';
 
-export class Tank extends Entity {
-  constructor(props: Pick<Entity, 'width' | 'height'>) {
+export type MoveStateT = {hasCollision: boolean};
+
+export class Tank extends DynamicEntity {
+  constructor(props: Pick<DynamicEntity, 'width' | 'height'>) {
     super(props);
-    this.movable = true;
     this.color = 'yellow';
   }
 }
