@@ -11,24 +11,32 @@ export class Game {
   view: View;
   controllerWasd: Controller;
   controllerArrows: Controller;
-  loopProcess: ReturnType<typeof setInterval> | null = null;
-  loopTimeMs = 20;
+  loopProcess: ReturnType<typeof setTimeout> | null = null;
+  loopTimeMs = 30;
   dynamicEntities: Set<Tank | Projectile> = new Set();
 
+  loop() {
+    const cycleStartTime = performance.now();
+    let nextCycleDelay = 0;
+    for (const entity of this.dynamicEntities) {
+      entity.act();
+      if (entity.shouldBeDestroyed) {
+        this.destroyEntity(entity);
+      }
+    }
+    nextCycleDelay = this.loopTimeMs - (cycleStartTime - performance.now());
+    if (nextCycleDelay < 0) {
+      nextCycleDelay = 0;
+    }
+    this.loopProcess = setTimeout(this.loop.bind(this), nextCycleDelay);
+  }
   startLoop() {
     this.stopLoop();
-    this.loopProcess = setInterval(() => {
-      for (const entity of this.dynamicEntities) {
-        entity.act();
-        if (entity.shouldBeDestroyed) {
-          this.destroyEntity(entity);
-        }
-      }
-    }, this.loopTimeMs);
+    this.loop();
   }
   stopLoop() {
     if (this.loopProcess) {
-      clearInterval(this.loopProcess);
+      clearTimeout(this.loopProcess);
     }
   }
   createTank(props: Pick<Entity, 'posX' | 'posY'> & Partial<Tank>) {
