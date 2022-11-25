@@ -10,10 +10,12 @@ export class Controller extends (EventBus.Model)  {
     KeyA: 'LEFT',
     KeyS: 'DOWN',
     KeyD: 'RIGHT',
+    Space: 'SHOOT',
     ArrowUp: 'UP',
     ArrowLeft: 'LEFT',
     ArrowDown: 'DOWN',
     ArrowRight: 'RIGHT',
+    Enter: 'SHOOT',
   };
   constructor(type: ControllerTypeT) {
     super();
@@ -26,13 +28,19 @@ export class Controller extends (EventBus.Model)  {
     }
   }
   keyPressed(code: keyof Controller['keyBindings']) {
-    this.pressedKeys[code] = true;
-    this.emit('move', this.keyBindings[code]);
+    if (code === 'Space' || code === 'Enter') {
+      this.emit('shoot');
+    } else {
+      this.pressedKeys[code] = true;
+      this.emit('move', this.keyBindings[code]);
+    }
   }
   keyReleased(code: keyof Controller['keyBindings']) {
-    delete this.pressedKeys[code];
-    if (!Object.keys(this.pressedKeys).length) {
-      this.emit('stop', 'STOP');
+    if (code !== 'Space' && code !== 'Enter') {
+      delete this.pressedKeys[code];
+      if (!Object.keys(this.pressedKeys).length) {
+        this.emit('stop', 'STOP');
+      }
     }
   }
   registerEventsForWasd() {
@@ -46,6 +54,7 @@ export class Controller extends (EventBus.Model)  {
         case 'KeyA':
         case 'KeyS':
         case 'KeyD':
+        case 'Space':
           this.keyPressed(event.code);
           break;
       }
@@ -73,6 +82,7 @@ export class Controller extends (EventBus.Model)  {
         case 'ArrowLeft':
         case 'ArrowDown':
         case 'ArrowRight':
+        case 'Enter':
           this.keyPressed(event.code);
           break;
       }

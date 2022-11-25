@@ -1,6 +1,5 @@
 import {Entity, DirectionT} from './Entity';
-
-export type MoveStateT = {hasCollision: boolean};
+import type {PosStateT} from './Zone';
 
 export class DynamicEntity extends Entity {
   moving = false;
@@ -38,6 +37,9 @@ export class DynamicEntity extends Entity {
     }
   }
   act() {
+    if (!this.spawned) {
+      return;
+    }
     if (!this.moving && !this.stopping) {
       return;
     }
@@ -58,9 +60,9 @@ export class DynamicEntity extends Entity {
   prepareToMove() {
     this.lastRect = this.getRect();
     this.nextRect = {...this.lastRect, ...this.getNextMove(true)};
-    const moveState: MoveStateT = {hasCollision: false};
-    this.emit('entityWillMove', moveState);
-    if (!moveState.hasCollision) {
+    const posState: PosStateT = {hasCollision: false};
+    this.emit('entityWillHaveNewPos', posState);
+    if (!posState.hasCollision) {
       this.canMove = true;
     } else {
       this.canMove = false;
@@ -99,5 +101,7 @@ export class DynamicEntity extends Entity {
         this.setState(this.getNextMove());
       }
     }
+    this.moveStepCheck();
   }
+  moveStepCheck() {}
 }

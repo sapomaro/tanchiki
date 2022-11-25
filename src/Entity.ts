@@ -1,4 +1,5 @@
 import {EventBus} from './EventBus';
+import type {PosStateT} from './Zone';
 
 export type DirectionT = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 export type RectT = Pick<Entity, 'posX' | 'posY' | 'width' | 'height'>;
@@ -11,11 +12,15 @@ export class Entity extends (EventBus.Model) {
   direction: DirectionT = 'UP';
   type: 'tank' | 'brickWall' | 'conreteWall' | 'trees' | 'water' | 'ice';
   alignedToGrid = true;
+  spawned = false;
   movable = false;
+  flying = false;
   crossable = false;
+  hittable = true;
   lastRect: RectT;
   nextRect: RectT;
   color = 'grey';
+  shouldBeDestroyed = false;
 
   constructor(props: Partial<Entity>) {
     super();
@@ -31,6 +36,16 @@ export class Entity extends (EventBus.Model) {
   }
   spawn({posX, posY}: Pick<Entity, 'posX' | 'posY'>) {
     this.lastRect = {...this.getRect(), ...{posX, posY}};
-    this.setState({posX, posY});
+    this.nextRect = {...this.lastRect};
+    const posState: PosStateT = {hasCollision: false};
+    this.emit('entityWillHaveNewPos', posState);
+    if (!posState.hasCollision) {
+      this.setState({posX, posY});
+      this.spawned = true;
+    }
+  }
+  despawn() {
+    this.emit('entityShouldBeDestroyed');
+    this.spawned = false;
   }
 }

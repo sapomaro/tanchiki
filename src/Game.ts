@@ -2,6 +2,7 @@ import {Zone} from './Zone';
 import {View} from './View';
 import {Controller} from './Controller';
 import {Tank} from './Tank';
+import {Projectile} from './Projectile';
 import {Terrain} from './Terrain';
 import type {Entity, DirectionT} from './Entity';
 
@@ -12,13 +13,16 @@ export class Game {
   controllerArrows: Controller;
   loopProcess: ReturnType<typeof setInterval> | null = null;
   loopTimeMs = 20;
-  dynamicEntities: Array<Tank> = [];
+  dynamicEntities: Set<Tank | Projectile> = new Set();
 
   startLoop() {
     this.stopLoop();
     this.loopProcess = setInterval(() => {
       for (const entity of this.dynamicEntities) {
         entity.act();
+        if (entity.shouldBeDestroyed) {
+          this.destroyEntity(entity);
+        }
       }
     }, this.loopTimeMs);
   }
@@ -29,11 +33,17 @@ export class Game {
   }
   createTank(props: Pick<Entity, 'posX' | 'posY'> & Partial<Tank>) {
     const entity = new Tank(props);
-    this.dynamicEntities.push(entity);
+    this.dynamicEntities.add(entity);
     this.view.bindEntityToLayer(entity, 'tanks');
     this.zone.registerEntity(entity);
     entity.spawn(props);
     return entity;
+  }
+  createProjectile(projectile: Projectile) {
+    this.dynamicEntities.add(projectile);
+    this.view.bindEntityToLayer(projectile, 'projectiles');
+    this.zone.registerEntity(projectile);
+    projectile.spawn({posX: projectile.posX, posY: projectile.posY});
   }
   createTerrain(props: Pick<Entity, 'type' | 'width' | 'height' | 'posX' | 'posY'>) {
     const entity = new Terrain(props);
@@ -45,6 +55,10 @@ export class Game {
     this.zone.registerEntity(entity);
     entity.spawn(props);
     return entity;
+  }
+  destroyEntity(entity: Tank | Projectile) {
+    entity.despawn();
+    this.dynamicEntities.delete(entity);
   }
   init() {
     this.zone = new Zone({width: 52, height: 52});
@@ -66,11 +80,17 @@ export class Game {
     this.controllerWasd.on('stop', () => {
       tank1.stop();
     });
+    this.controllerWasd.on('shoot', () => {
+      this.createProjectile(tank1.shoot());
+    });
     this.controllerArrows.on('move', (direction: DirectionT) => {
       tank2.move(direction);
     });
     this.controllerArrows.on('stop', () => {
       tank2.stop();
+    });
+    this.controllerArrows.on('shoot', () => {
+      this.createProjectile(tank2.shoot());
     });
   }
 

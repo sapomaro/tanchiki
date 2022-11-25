@@ -3,7 +3,7 @@ import type {Entity} from './Entity';
 
 type LayerT = Record<string, {
   context: CanvasRenderingContext2D,
-  entities: Array<Entity>,
+  entities: Set<Entity>,
 }>;
 
 export class View {
@@ -33,19 +33,26 @@ export class View {
     layer.style.zIndex = (this.layerZIndexCount++).toString();
     this.layers[id] = {
       context: layer.getContext('2d') as CanvasRenderingContext2D,
-      entities: [],
+      entities: new Set(),
     };
     document.body.appendChild(layer);
     return layer;
   }
   bindEntityToLayer(entity: Entity, layerId: keyof LayerT) {
-    this.layers[layerId].entities.push(entity);
+    this.layers[layerId].entities.add(entity);
     entity.on('entityShouldUpdate', () => {
       this.eraseEntityFromLayer(entity, layerId);
     });
     entity.on('entityDidUpdate', () => {
       this.drawEntityOnLayer(entity, layerId);
     });
+    entity.on('entityShouldBeDestroyed', () => {
+      this.eraseEntityFromLayer(entity, layerId);
+      this.removeEntityFromLayer(entity, layerId);
+    });
+  }
+  removeEntityFromLayer(entity: Entity, layerId: keyof LayerT) {
+    this.layers[layerId].entities.delete(entity);
   }
   getEntityActualRect(entity: Entity) {
     return [

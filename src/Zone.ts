@@ -1,5 +1,6 @@
 import type {Entity, RectT} from './Entity';
-import type {MoveStateT} from './DynamicEntity';
+
+export type PosStateT = {hasCollision: boolean};
 
 export class Zone {
   width = 0;
@@ -33,10 +34,18 @@ export class Zone {
       this.updateMatrix(entity.lastRect, null);
     }
   }
+  destroyEntity(entity: Entity) {
+    this.updateMatrix(entity.lastRect, null);
+    if (!entity.alignedToGrid) {
+      this.updateMatrix(entity.nextRect, null);
+    } else {
+      this.updateMatrix(entity.getRect(), null);
+    }
+  }
   registerEntity(entity: Entity) {
-    entity.on('entityWillMove', (moveState: MoveStateT) => {
+    entity.on('entityWillHaveNewPos', (posState: PosStateT) => {
       if (this.hasCollision(entity)) {
-        moveState.hasCollision = true;
+        posState.hasCollision = true;
       } else {
         if (entity.alignedToGrid) {
           this.updateMatrix(entity.nextRect, entity);
@@ -48,6 +57,9 @@ export class Zone {
     });
     entity.on('entityDidUpdate', () => {
       this.writeEntityToMatrix(entity);
+    });
+    entity.on('entityShouldBeDestroyed', () => {
+      this.destroyEntity(entity);
     });
   }
   isBeyondXAxis(rect: RectT) {
@@ -68,8 +80,12 @@ export class Zone {
     for (let x = rect.posX + rect.width - 1; x >= rect.posX; --x) {
       for (let y = rect.posY + rect.height - 1; y >= rect.posY; --y) {
         const cell = this.matrix[x][y];
-        if (cell !== entity && cell !== null && !cell.crossable) {
-          return true;
+        if (cell !== entity && cell !== null) {
+          if (entity.flying && cell.hittable) {
+            return true;
+          } else if (!entity.flying && !cell.crossable) {
+            return true;
+          }
         }
       }
     }

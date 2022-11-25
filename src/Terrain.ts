@@ -11,10 +11,12 @@ export class Terrain extends Entity {
         break;
       case 'trees':
         this.crossable = true;
+        this.hittable = false;
         this.color = 'green';
         break;
       case 'water':
         this.crossable = false;
+        this.hittable = false;
         this.color = 'blue';
         break;
     }
