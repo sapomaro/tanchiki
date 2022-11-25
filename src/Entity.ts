@@ -16,6 +16,7 @@ export class Entity extends (EventBus.Model) {
   lastRect: RectT;
   nextRect: RectT;
   color = 'grey';
+
   constructor(props: Partial<Entity>) {
     super();
     Object.assign(this, props);

@@ -1,5 +1,5 @@
 import type {Entity, RectT} from './Entity';
-import type {MoveStateT} from './Tank';
+import type {MoveStateT} from './DynamicEntity';
 
 export class Zone {
   width = 0;

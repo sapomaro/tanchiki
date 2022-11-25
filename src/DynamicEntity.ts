@@ -1,41 +1,59 @@
 import {Entity, DirectionT} from './Entity';
+
 export type MoveStateT = {hasCollision: boolean};
 
 export class DynamicEntity extends Entity {
-  moveLength = 2;
-  moveSpeed = 2;
-  moveStages = 8;
-  turnStages = 2;
-  moveProgress = 0;
   moving = false;
+  stopping = false;
   canMove = true;
-  currentDirection: DirectionT;
+  movePace = 2;
+  moveSpeed = 2;
+  moveStepsProgress = 0;
+  moveStepsTotal = 8;
+  nextDirection: DirectionT;
 
-  constructor(props: Pick<Entity, 'width' | 'height'>) {
+  constructor(props: Partial<Entity>) {
     super(props);
     this.movable = true;
-    this.color = 'yellow';
   }
-  getMoveStages() {
-    return this.moveStages - this.moveSpeed;
+  getMoveSteps() {
+    return this.moveStepsTotal - this.moveSpeed;
   }
-  getNextMove(fullMove = false) {
-    let moveLength = 0;
-    if (fullMove) {
-      moveLength = this.moveLength;
-    } else {
-      moveLength = this.moveLength / this.getMoveStages();
+  getMoveStepPace() {
+    return this.movePace / this.getMoveSteps();
+  }
+  move(direction: DirectionT) {
+    this.moving = true;
+    this.nextDirection = direction;
+  }
+  stop() {
+    this.moving = false;
+    if (this.moveStepsProgress) {
+      this.stopping = true;
     }
-    switch(this.direction) {
-      case 'UP':
-        return {posY: this.posY - moveLength};
-      case 'DOWN':
-        return {posY: this.posY + moveLength};
-      case 'LEFT':
-        return {posX: this.posX - moveLength};
-      case 'RIGHT':
-        return {posX: this.posX + moveLength};
+  }
+  turn(newDirection: DirectionT) {
+    if (this.direction !== newDirection) {
+      this.setState({direction: newDirection});
     }
+  }
+  act() {
+    if (!this.moving && !this.stopping) {
+      return;
+    }
+    if (this.moveStepsProgress === 0) {
+      if (this.direction !== this.nextDirection) {
+        this.turnStep();
+      } else {
+        this.prepareToMove();
+      }
+    }
+    this.moveStep();
+  }
+  turnStep() {
+    this.turn(this.nextDirection);
+    ++this.moveStepsProgress;
+    this.canMove = false;
   }
   prepareToMove() {
     this.lastRect = this.getRect();
@@ -48,23 +66,30 @@ export class DynamicEntity extends Entity {
       this.canMove = false;
     }
   }
-  move() {
-    if (!this.moving && !this.moveProgress) {
-      return;
+  getNextMove(fullMove = false) {
+    let movePace = 0;
+    if (fullMove) {
+      movePace = this.movePace;
+    } else {
+      movePace = this.getMoveStepPace();
     }
-    if (this.moveProgress === 0) {
-      if (this.direction !== this.currentDirection) {
-        this.turn(this.currentDirection);
-        this.moveProgress += this.turnStages;
-        this.canMove = false;
-      } else {
-        this.prepareToMove();
-      }
+    switch(this.direction) {
+      case 'UP':
+        return {posY: this.posY - movePace};
+      case 'DOWN':
+        return {posY: this.posY + movePace};
+      case 'LEFT':
+        return {posX: this.posX - movePace};
+      case 'RIGHT':
+        return {posX: this.posX + movePace};
     }
-    const fullCycle = (++this.moveProgress >= this.getMoveStages());
+  }
+  moveStep() {
+    const fullCycle = (++this.moveStepsProgress >= this.getMoveSteps());
     if (fullCycle) {
-      this.moveProgress = 0;
+      this.moveStepsProgress = 0;
       this.alignedToGrid = true;
+      this.stopping = false;
       if (this.canMove) {
         this.setState(this.nextRect);
       }
@@ -73,19 +98,6 @@ export class DynamicEntity extends Entity {
       if (this.canMove) {
         this.setState(this.getNextMove());
       }
-    }
-
-  }
-  go(direction: DirectionT) {
-    this.moving = true;
-    this.currentDirection = direction;
-  }
-  stop() {
-    this.moving = false;
-  }
-  turn(newDirection: DirectionT) {
-    if (this.direction !== newDirection) {
-      this.setState({direction: newDirection});
     }
   }
 }
