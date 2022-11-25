@@ -45,7 +45,6 @@ export class Controller extends (EventBus.Model)  {
   }
   registerEventsForWasd() {
     window.addEventListener('keydown', (event: KeyboardEvent) => {
-      event.preventDefault();
       if (event.repeat) {
         return false;
       }
@@ -56,24 +55,24 @@ export class Controller extends (EventBus.Model)  {
         case 'KeyD':
         case 'Space':
           this.keyPressed(event.code);
+          event.preventDefault();
           break;
       }
     });
     window.addEventListener('keyup', (event: KeyboardEvent) => {
-      event.preventDefault();
       switch(event.code) {
         case 'KeyW':
         case 'KeyA':
         case 'KeyS':
         case 'KeyD':
           this.keyReleased(event.code);
+          event.preventDefault();
           break;
       }
     });
   }
   registerEventsForArrows() {
     window.addEventListener('keydown', (event: KeyboardEvent) => {
-      event.preventDefault();
       if (event.repeat) {
         return false;
       }
@@ -84,17 +83,18 @@ export class Controller extends (EventBus.Model)  {
         case 'ArrowRight':
         case 'Enter':
           this.keyPressed(event.code);
+          event.preventDefault();
           break;
       }
     });
     window.addEventListener('keyup', (event: KeyboardEvent) => {
-      event.preventDefault();
       switch(event.code) {
         case 'ArrowUp':
         case 'ArrowLeft':
         case 'ArrowDown':
         case 'ArrowRight':
           this.keyReleased(event.code);
+          event.preventDefault();
           break;
       }
     });
