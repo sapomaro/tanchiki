@@ -12,19 +12,26 @@ export class Game {
   controllerWasd: Controller;
   controllerArrows: Controller;
   loopProcess: ReturnType<typeof setTimeout> | null = null;
-  loopTimeMs = 30;
-  dynamicEntities: Set<Tank | Projectile> = new Set();
+  loopTimeMs = 25;
+  loopEntities: Set<Tank | Projectile> = new Set();
+  settings = {width: 52, height: 52};
 
+  constructor(root: HTMLElement) {
+    this.zone = new Zone(this.settings);
+    this.view = new View(this.settings, root);
+    this.controllerWasd = new Controller(['wasd']);
+    this.controllerArrows = new Controller(['arrows']);
+  }
   loop() {
     const cycleStartTime = performance.now();
-    let nextCycleDelay = 0;
-    for (const entity of this.dynamicEntities) {
+    let nextCycleDelay = this.loopTimeMs;
+    for (const entity of this.loopEntities) {
       entity.act();
       if (entity.shouldBeDestroyed) {
         this.destroyEntity(entity);
       }
     }
-    nextCycleDelay = this.loopTimeMs - (cycleStartTime - performance.now());
+    nextCycleDelay -= cycleStartTime - performance.now();
     if (nextCycleDelay < 0) {
       nextCycleDelay = 0;
     }
@@ -41,14 +48,14 @@ export class Game {
   }
   createTank(props: Pick<Entity, 'posX' | 'posY'> & Partial<Tank>) {
     const entity = new Tank(props);
-    this.dynamicEntities.add(entity);
+    this.loopEntities.add(entity);
     this.view.bindEntityToLayer(entity, 'tanks');
     this.zone.registerEntity(entity);
     entity.spawn(props);
     return entity;
   }
   createProjectile(projectile: Projectile) {
-    this.dynamicEntities.add(projectile);
+    this.loopEntities.add(projectile);
     this.view.bindEntityToLayer(projectile, 'projectiles');
     this.zone.registerEntity(projectile);
     projectile.spawn({posX: projectile.posX, posY: projectile.posY});
@@ -66,17 +73,13 @@ export class Game {
   }
   destroyEntity(entity: Tank | Projectile) {
     entity.despawn();
-    this.dynamicEntities.delete(entity);
+    this.loopEntities.delete(entity);
   }
   init() {
-    this.zone = new Zone({width: 52, height: 52});
-    this.view = new View(this.zone);
-    this.controllerWasd = new Controller(['wasd']);
-    this.controllerArrows = new Controller(['arrows']);
     this.startLoop();
 
-    const tank1 = this.createTank({posX: 4, posY: 4, moveSpeed: 4});
-    const tank2 = this.createTank({posX: 12, posY: 12, color: 'lime'});
+    const tank1 = this.createTank({posX: 4, posY: 4, role: 'player1', moveSpeed: 4});
+    const tank2 = this.createTank({posX: 12, posY: 12, role: 'player2', color: 'lime'});
 
     this.createTerrain({type: 'brickWall', width: 4, height: 32, posX: 20, posY: 16});
     this.createTerrain({type: 'trees', width: 16, height: 8, posX: 28, posY: 16});

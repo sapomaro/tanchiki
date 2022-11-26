@@ -10,7 +10,8 @@ export class Entity extends (EventBus.Model) {
   width = 0;
   height = 0;
   direction: DirectionT = 'UP';
-  type: 'tank' | 'brickWall' | 'conreteWall' | 'trees' | 'water' | 'ice';
+  role: 'player1' | 'player2' | 'enemy' | 'neutral';
+  type: 'tank' | 'flag' | 'brickWall' | 'conreteWall' | 'trees' | 'water' | 'ice';
   alignedToGrid = true;
   spawned = false;
   movable = false;

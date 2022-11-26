@@ -1,4 +1,3 @@
-import type {Zone} from './Zone';
 import type {Entity} from './Entity';
 
 type LayerT = Record<string, {
@@ -12,14 +11,17 @@ export class View {
   pixelRatio = 8;
   layerZIndexCount = 0;
   layers: LayerT = {};
+  root: HTMLElement;
 
-  constructor(zone: Zone) {
-    this.width = zone.width;
-    this.height = zone.height;
+  constructor({width, height}: Pick<View, 'width' | 'height'>, root: HTMLElement) {
+    this.width = width;
+    this.height = height;
+    this.root = root;
     this.createLayer('floor').style.background = '#000';
     this.createLayer('tanks');
     this.createLayer('projectiles');
     this.createLayer('ceiling');
+    this.createLayer('overlay').style.position = 'relative';
   }
   convertToPixels(value: number) {
     return Math.round(value * this.pixelRatio);
@@ -35,7 +37,7 @@ export class View {
       context: layer.getContext('2d') as CanvasRenderingContext2D,
       entities: new Set(),
     };
-    document.body.appendChild(layer);
+    this.root.appendChild(layer);
     return layer;
   }
   bindEntityToLayer(entity: Entity, layerId: keyof LayerT) {

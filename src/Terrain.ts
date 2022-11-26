@@ -4,6 +4,7 @@ export class Terrain extends Entity {
   constructor(props: Pick<Entity, 'width' | 'height' | 'type'>) {
     super(props);
     this.type = props.type;
+    this.role = 'neutral';
     switch (this.type) {
       case 'brickWall':
         this.crossable = false;
