@@ -23,6 +23,10 @@
 
 ---
 
+![Game engine demo](img/GameEngineDemo1.gif)
+
+---
+
 ## Базовые классы
 
 ### Game
